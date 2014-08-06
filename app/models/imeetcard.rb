@@ -8,6 +8,6 @@ class Imeetcard < ActiveResource::Base
     #self.format = :json
     self.format = ::JsonFormatter.new(:issues)
     self.element_name = "issues" 
-    self.user = "kcecadmin"
-    self.password = "bng29sam"
+    self.user = "#"
+    self.password = "#"
 end
