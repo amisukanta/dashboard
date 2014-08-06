@@ -1,0 +1,237 @@
+
+<% if @projects.any? %>
+
+<% pta = [] %>
+<% pia = [] %>
+<% opta = [] %>
+<% cpta = [] %>
+<% opia = [] %>
+<% cpia = [] %>
+
+<table class="list files">
+<thead>
+  <tr bgcolor="#eaeaea">
+    <th rowspan="2"><b><%= "Project" %></b></th>
+    <th rowspan="2"><b><%= "Due Date" %></b></th>
+    <th rowspan="2"><b><%= "Project Status " %></b></th>
+
+    <!--<td><b><%#= "Progress" %></b></td>-->
+    <th colspan="2"> Issues</th>
+    <th colspan="2"> Tasks </th>
+    <th rowspan="2"> Late % </th>
+  </tr>
+ <tr bgcolor="#eaeaea">
+   
+    <!--<td><b><%#= "Progress" %></b></td>-->
+   
+    <th><b><%= "Open" %></b></th>
+    <th><b><%= "Complete" %></b></th>
+
+    <th><b><%= "Open" %></b></th>
+    <th><b><%= "Complete" %></b></th>
+   
+  
+  </tr>
+  
+</thead>
+
+<% for project in @projectss %>
+   
+       
+        <% opIssues = Issue.where(project_id: project.id, status_id: [1,2], :tracker_id => 5) %>
+
+        <% cloIssues = Issue.where(project_id: project.id, status_id: 5, :tracker_id => 5) %>
+
+        <% opTasks = Issue.where(project_id: project.id, status_id: [1,2], :tracker_id => 4) %>
+
+        <% cloTasks = Issue.where(project_id: project.id, status_id: 5, :tracker_id => 4) %>
+        <% allTask = Issue.where(project_id: project.id, status_id: [1,2,5], :tracker_id => 4 ) %> 
+        <% allIssue = Issue.where(project_id: project.id, status_id: [1,2,5], :tracker_id => 5 ) %>   
+        
+        <!--rejecting parent ID's form child-->
+
+        <% opIssues.each do |o|  %>
+        <% if o.parent_id? %>
+        <% opia << o.parent_id %>
+        <% end %>
+        <% end %>
+        <% opIssues = opIssues.reject {|s| opia.uniq.include? s.id }.count %>
+
+        <% cloIssues.each do |c|  %>
+        <% if c.parent_id? %>
+        <% cpia << c.parent_id %>
+        <% end %>
+        <% end %>
+        <% cloIssues = cloIssues.reject {|s| cpia.uniq.include? s.id }.count %>
+        
+        <% opTasks.each do |o|  %>
+        <% if o.parent_id? %>
+        <% opta << o.parent_id %>
+        <% end %>
+        <% end %>
+
+        <% opTasks = opTasks.reject {|s| opta.uniq.include? s.id }.count %>
+
+        <% cloTasks.each do |c|  %>
+        <% if c.parent_id? %>
+        <% cpta << c.parent_id %>
+        <% end %>
+        <% end %>
+
+        <% cloTasks = cloTasks.reject {|s| cpta.uniq.include? s.id }.count %>
+
+        <% allTask.each do |t|  %>
+        <% if t.parent_id? %>
+        <% pta << t.parent_id %>
+        <% end %>
+        <% end %>
+        
+        <%#= pta.uniq %>
+        <% allTask = allTask.reject {|s| pta.uniq.include? s.id  } %>
+        <% aT = allTask.count %>
+
+        <% allIssue.each do |i|  %>
+        <% if i.parent_id? %>
+        <% pia << i.parent_id %>
+        <% end %>
+        <% end %>
+        <% allIssue = allIssue.reject {|s| pia.uniq.include? s.id  } %>
+
+        <% aI = allIssue.count %>
+        <% dueTask = 0 %> 
+        <%# pt = 0 %>
+        <%# ptl = 0 %>
+        <% allTask.each do |t|  %>
+        <%# if t.parent_id? %>
+        <%# pta << t.parent_id %>
+        <%# pt+= 1 %>
+        <%# elsif  !t.parent_id? %>
+        <%# ptl+= 1 %>
+        <%# end %>
+        <% if t.due_date? && t.due_date < t.updated_on.to_date  %>
+       
+ 
+        <% dueTask += 1 %>
+       
+        <% end %>
+        <% end %>
+       
+        <% dueIssue = 0 %> 
+        <% allIssue.each do |i|  %>
+        <% if i.due_date? && i.due_date < i.updated_on.to_date %>
+        <% dueIssue+= 1 %>
+        <% end %>
+        <% end %>
+  
+<%#= pt %>
+
+  <!--progress %-->
+      <% if aT != 0 %>
+      <% ct =  cloTasks.to_f/aT  %>  
+      <% else %> 
+      <% ct =  0  %>  
+      <% end %>
+      <% ctp = (ct*0.75)*100 %>  
+      <% if aI != 0 %>
+      <% ci = cloIssues.to_f/aI  %>
+      <% else %> 
+      <% ci =  0  %>  
+      <% end %>
+      <% cip = (ci*0.25)*100  %>
+      <% progress = (ctp + cip).ceil %>
+<!-- late % calculation by sukanta-->
+      <% if aT != 0 %>
+      <% rt =  dueTask.to_f/aT  %>    
+      <% else %> 
+      <% rt =  0  %>  
+      <% end %>
+
+      <% rtl = (rt*0.75)*100 %>  
+      <% if aI != 0 %>
+      <% ri = dueIssue.to_f/aI  %>
+      <% else %> 
+      <% ri =  0  %>  
+      <% end %>
+      <% ril = (ri*0.25)*100  %>
+      <% late = (rtl + ril).ceil %>
+ 
+
+<tbody>
+     <tr class="file <%= cycle("odd", "even") %>">
+    <td class="filename"> <%= link_to_project project %> </td>
+    <td>
+     <% project.visible_custom_field_values.each do |custom_value| %>
+      <% if !custom_value.value.blank? %>
+       <% pDate = custom_value.to_s %>
+       <%= date = Date.parse(pDate).strftime("%B %d, %Y") %>
+       <% else %>
+      <%= "Due date is not available" %>
+     <% end %>
+    <% end %>
+   </td>
+
+
+
+    <td ><b>
+      <% if late.between?(0, 15) %>
+      <%#= image_tag '/plugin_assets/imeetdashboard/images/green.jpg', :size  => '22x22' %> 
+       
+      <div class="nice round progress large-6"> 
+      <span class="meter" style="width: <%= progress %>%"><%= progress %>%</span> 
+      </div>
+
+      <% elsif late.between?(16, 60)  %>
+
+       <div class="nice round progress success large-10"> 
+      <span class="meter" style="width: <%= progress %>%"><%= progress %>%</span> 
+      </div>
+
+      <%#= image_tag '/plugin_assets/imeetdashboard/images/red.jpg', :size  => '22x22' %> 
+      
+      <% elsif late.between?(61, 100) %>
+
+       <div class="nice round progress alert large-10"> 
+      <span class="meter" style="width: <%= progress %>%"><%= progress %>%</span> 
+      </div>
+
+<%#= image_tag '/plugin_assets/imeetdashboard/images/yellow.jpg', :size  => '22x22'  %>
+
+
+<%end %>
+</td>
+
+
+
+<td>
+
+<style> .newIssue{
+        COLOR: red 
+}
+</style>
+      <%= link_to opIssues, project_issues_path(project, :status_id => 'o', :set_filter => 1, :tracker_id => 5) %>
+
+</td>
+
+
+<td class = "newIssue">
+
+<style> .newIssue{
+        COLOR: red 
+}
+</style>
+      <%= link_to cloIssues, project_issues_path(project, :status_id => 'c', :set_filter => 1, :tracker_id => 5) %>
+</td>
+    
+<td> <%= link_to opTasks, :controller => 'issues', :action => 'tasks', :project_id => project.id, :status_id => 'o', :set_filter => 1, :tracker_id => 4 %></td>
+<td> <%= link_to cloTasks,  :controller => 'issues', :action => 'tasks', :project_id => project.id, :status_id => 'c', :set_filter => 1, :tracker_id => 4 %></td>
+  
+<td><%= late %>%</td>
+
+<% end %>
+
+
+</tbody>
+</table>
+
+<%#= button_to   "See All Projects", { :controller => 'projects', :action => 'index' }, :caption => :label_project_plural, :method => :get, :if => Proc.new { User.current.logged? } %>
+<% end %> 

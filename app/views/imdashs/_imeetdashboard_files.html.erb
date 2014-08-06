@@ -1,0 +1,46 @@
+
+<% if @allFiles.count==0 %>
+<br />
+<%= "You don't have any files " %>
+
+<% else %>
+<table class="sortable" id ="tablesorter">
+  <thead>   <tr >
+    <th><b><%= "File Name" %></b></th>
+    <th><b><%= "Uploaded On" %></b></th>
+    <th></th>
+
+  </tr>
+ </thead>
+
+<tbody>
+<% count = 0 %>
+<% for a in @allFiles %>
+
+<% if User.current.id == a.author_id %>
+    <% break  if count>2 %>
+    <tr class=" <%= cycle("odd", "even") %>">
+    <td  ><%= link_to_attachment a %></td>
+    <td ><%= a.created_on.strftime("%B %d, %Y") %></td>
+    <td class="buttons">
+    <%= link_to(image_tag('delete.png'), attachment_path(a),
+                                         :data => {:confirm => l(:text_are_you_sure)}, :method => :delete)  %>
+    </td>
+ 
+     </tr>
+
+       <% count = count+1 %>
+  <%end %>
+
+
+<% end %>
+</tbody>
+
+
+</table>
+<%= button_to  "See All Files", {:controller => 'fileviews', :action => 'index'}, :caption => "File", :method => :get,  :if => Proc.new { User.current.logged? } %>
+<% end %>
+
+
+
+

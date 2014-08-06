@@ -1,0 +1,94 @@
+<% if issues && issues.any? %>
+
+<% lol = [] %>
+<% issues.each do |i| %>
+<% if i.parent_id? %>
+<% lol << i.parent_id %>
+<% end %>
+<% end %>
+<%#= lol %>
+<% issues = issues.reject{|s| lol.uniq.include? s.id } %>
+
+<%= form_tag({}) do %>
+ <table class="sortable" id="tablesorter">
+    <thead class="fixedHeader" ><tr class="first">
+    <th><%= "ID" %></th>
+    <th><%=l(:field_project)%></th>
+    <th ><%=l(:field_tracker)%></th>
+    <th><%=l(:field_subject)%></th>
+    <th><%=l(:field_updated_on)%></th>
+    <th>Progress status</th>
+    </tr></thead>
+    <tbody>
+    <% for i in issues %>
+    <tr class=" <%= cycle('odd', 'even') %> <%= i.css_classes %>">
+      <td class="id">
+        <%= check_box_tag("ids[]", i.id, false, :style => 'display:none;', :id => nil) %>
+        <%= link_to i.id, issue_path(i) %>
+      </td>
+      <td ><%= link_to_project(i.project) %></td>
+      <td ><%=h i.tracker %></td>
+      <td>
+        <%= link_to truncate(i.subject, :length => 60), issue_path(i) %> (<%=h i.status %>)
+      </td>
+      <td ><%= i.updated_on.to_date %></td>
+        <% if i.due_date!= nil %>
+        <% sub_date = (i.due_date - i.updated_on.to_date ).to_i  %>
+        <% end %>
+      <td >
+       <% if sub_date!= nil && sub_date < 0  %>
+          <%#= image_tag '/plugin_assets/imeetdashboard/images/red.jpg', :size  => '22x22' %> 
+      <div class="nice round progress alert large-10"> 
+      <span class="meter" style="width: <%= i.done_ratio %>%"><%= i.done_ratio %>%</span> 
+      </div>
+     <% elsif sub_date!= nil && sub_date >= 2   %>
+          <%#= image_tag '/plugin_assets/imeetdashboard/images/green.jpg', :size  => '22x22' %> 
+      <div class="nice round progress large-6"> 
+      <span class="meter" style="width: <%= i.done_ratio %>%"><%= i.done_ratio %>%</span> 
+      </div>
+     <% elsif sub_date!= nil && sub_date == 1 && i.done_ratio <= 80  %>
+          <%#= image_tag '/plugin_assets/imeetdashboard/images/yellow.jpg', :size  => '22x22' %> 
+      <div class="nice round progress success large-10"> 
+      <span class="meter" style="width: <%= i.done_ratio %>%"><%= i.done_ratio %>%</span> 
+      </div>
+
+     <% elsif sub_date!= nil && sub_date == 1 && i.done_ratio >= 80  %>
+          <%#= image_tag '/plugin_assets/imeetdashboard/images/green.jpg', :size  => '22x22' %> 
+      <div class="nice round progress large-6"> 
+      <span class="meter" style="width: <%= i.done_ratio %>%"><%= i.done_ratio %>%</span> 
+      </div> 
+
+     <% elsif sub_date!= nil && sub_date == 0 && i.done_ratio != 100 %>
+          <%#= image_tag '/plugin_assets/imeetdashboard/images/red.jpg', :size  => '22x22' %> 
+      <div class="nice round progress alert large-10"> 
+      <span class="meter" style="width: <%= i.done_ratio %>%"><%= i.done_ratio %>%</span> 
+      </div>
+
+     <% elsif sub_date!= nil && sub_date == 0 && i.done_ratio == 100 %>
+          <%#= image_tag '/plugin_assets/imeetdashboard/images/green.jpg', :size  => '22x22' %> 
+      <div class="nice round progress large-6"> 
+      <span class="meter" style="width: <%= i.done_ratio %>%"><%= i.done_ratio %>%</span> 
+      </div> 
+
+     <% end %> 
+
+      </td>
+    </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% end %>
+<% else %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+<script>
+<script>
+
+$(document).ready(function() 
+    { 
+       $("#tablesorter").tablesorter(); 
+    } 
+); 
+
+</script>
